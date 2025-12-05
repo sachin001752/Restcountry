@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>National Anthem Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      width: 400px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+
+    .user {
+      background: #007bff;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .bot {
+      background: #e4e6eb;
+      color: black;
+      align-self: flex-start;
+    }
+
+    .input-box {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+
+    .input-box input {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    .input-box button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box">
+      <div class="message bot">Hello! Type a country name and I’ll play its national anthem 🎶</div>
+    </div>
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="Enter country name...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+
+    function addMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.classList.add('message', sender);
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const country = input.value.trim();
+      if (!country) return;
+
+      addMessage(country, 'user');
+      input.value = '';
+
+      try {
+        // Validate with REST Countries API
+        const res = await fetch(`https://restcountries.com/v3.1/name/${country}?fullText=true`);
+        const data = await res.json();
+
+        if (data.status === 404) {
+          addMessage("❌ I couldn’t find that country. Try again.", 'bot');
+          return;
+        }
+
+        const countryName = data[0].name.common;
+        const anthemUrl = `https://nationalanthems.info/${countryName.toLowerCase().replace(/ /g,'-')}.mp3`;
+
+        addMessage(`✅ Found ${countryName}. Playing its national anthem...`, 'bot');
+
+        const audio = new Audio(anthemUrl);<!----india---->
+        audio.play().catch(() => {
+          addMessage("https://youtu.be/HtMF973tXIY?si=2jp2fuThIo9wsSmO.", 'bot');
+          
+        });
+
+      } catch (err) {
+        addMessage("⚠️ Error fetching data. Please try again later.", 'bot');
+      }
+    }
+  </script>
+</body>
+</html>

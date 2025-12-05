@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot with Country Anthem</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .chatbot-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      cursor: pointer;
+    }
+    .chat-container {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      height: 400px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 75%;
+    }
+    .user {
+      align-self: flex-end;
+      background: #007bff;
+      color: #fff;
+    }
+    .bot {
+      align-self: flex-start;
+      background: #eee;
+      color: #000;
+    }
+    .input-box {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .input-box input {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      outline: none;
+    }
+    .input-box button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="chatbot-btn" onclick="toggleChat()">💬</button>
+
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">Chatbot</div>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-box">
+      <input type="text" id="userInput" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Hidden Audio Player -->
+  <audio id="anthemPlayer" controls style="display:none;"></audio>
+
+  <script>
+    const chatContainer = document.getElementById("chatContainer");
+    const chatBox = document.getElementById("chatBox");
+    const userInput = document.getElementById("userInput");
+    const anthemPlayer = document.getElementById("anthemPlayer");
+
+    function toggleChat() {
+      chatContainer.style.display =
+        chatContainer.style.display === "flex" ? "none" : "flex";
+    }
+
+    function sendMessage() {
+      let message = userInput.value.trim();
+      if (message === "") return;
+
+      appendMessage(message, "user");
+
+      setTimeout(() => {
+        let reply = getBotReply(message);
+        appendMessage(reply, "bot");
+      }, 500);
+
+      userInput.value = "";
+    }
+
+    function appendMessage(text, sender) {
+      let msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", sender);
+      msgDiv.textContent = text;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function getBotReply(message) {
+      message = message.toLowerCase();
+
+      if (message.includes("hello") || message.includes("hi")) {
+        return "Hello! 👋 Type a country name to hear its national anthem.";
+      } else if (message.includes("bye")) {
+        return "Goodbye! Have a nice day 😊";
+      } else {
+        // Treat message as a country name
+        playAnthem(message);
+        return "Searching for " + message + " anthem... 🎶";
+      }
+    }
+
+    async function playAnthem(countryName) {
+      try {
+        // Use RestCountries API
+        let response = await fetch(`https://restcountries.com/v3.1/name/${countryName}?fullText=true`);
+        let data = await response.json();
+
+        if (data && data[0]) {
+          let anthemUrl = data[0].coatOfArms?.png || null; // Placeholder (since RestCountries API has no anthem links)
+
+          // 👉 Replace this with your own anthem MP3 collection
+          // Example: store anthem MP3 files in "anthems/" folder with country name
+          anthemUrl = `anthems/${countryName.toLowerCase()}.mp3`;
+
+          anthemPlayer.src = anthemUrl;
+          anthemPlayer.style.display = "block";
+          anthemPlayer.play();
+          appendMessage("Now playing " + data[0].name.common + " 🇨🇮 anthem 🎵", "bot");
+        } else {
+          appendMessage("Sorry, I could not find that country.", "bot");
+        }
+      } catch (error) {
+        appendMessage("Error fetching country data.", "bot");
+      }
+    }
+  </script>
+</body>
+</html>
